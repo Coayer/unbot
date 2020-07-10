@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/Coayer/unbot/internal/wikiQA"
+	"github.com/Coayer/unbot/internal/calculator"
 	"log"
 	"net/http"
 	"os"
@@ -16,7 +16,7 @@ func init() {
 	go func() {
 		<-c
 		log.Println("Closing Bert model session")
-		wikiQA.Model.Session.Close()
+		//wikiQA.Model.Session.Close()
 		os.Exit(0)
 	}()
 }
@@ -28,6 +28,13 @@ func main() {
 
 func handler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
-		fmt.Fprint(w, r.URL.Query().Get("query"))
+		query := r.URL.Query().Get("query")
+
+		if query == "" {
+			fmt.Fprint(w, "Please repeat your query")
+		} else {
+			//wikiQA.AskWiki(query)
+			fmt.Fprint(w, calculator.Evaluate(query))
+		}
 	}
 }

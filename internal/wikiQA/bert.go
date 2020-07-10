@@ -41,7 +41,6 @@ func askBert(query string, context string) string {
 		startVector, endVector = forward(makeInputIDs(queryTokens, contextTokens), makeAttentionMask(len(queryTokens), len(contextTokens)))
 	}
 
-	log.Println(subContextStart, subContextEnd)
 	log.Println(contextTokens[subContextStart:subContextEnd])
 
 	//makes probability distributions for start and end positions of answer
@@ -96,7 +95,7 @@ func forward(inputIDs []int32, attentionMask []int32) ([]float32, []float32) {
 func longContextForward(queryTokens []string, contextTokens []string) ([]float32, []float32, int, int) {
 	chunkSize := dim - len(queryTokens) - 3 //control tokens
 
-	highestStartEnd := float32(-1000) //highest sum of BERT's confidence of answer span
+	highestStartEnd := float32(math.Inf(-1)) //highest sum of BERT's confidence of answer span (starts -Inf)
 	startVector, endVector := make([]float32, dim), make([]float32, dim)
 	subContextStart, subContextEnd := 0, len(contextTokens) //context from which the highest confidence of answer was found
 
