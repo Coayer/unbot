@@ -1,16 +1,14 @@
 package wikiQA
 
 import (
+	tf "github.com/tensorflow/tensorflow/tensorflow/go"
 	"log"
 	"math"
-	"strings"
-
-	tf "github.com/tensorflow/tensorflow/tensorflow/go"
 )
 
 var Model = loadModel()
 
-const dim int = 384
+const DIM int = 384
 
 //loadModel loads TensorFlow SavedModel from disk
 func loadModel() *tf.SavedModel {
@@ -25,46 +23,43 @@ func loadModel() *tf.SavedModel {
 
 //askBert is used to ask the BERT model a question
 func askBert(query string, context string) string {
-	queryTokens := tokenize(query)
-	contextTokens, piecesPerToken := tokenizePiecesCount(context)
+	queryTokens, contextTokens := tokenize(query), tokenize(context)
+	startVector, endVector := make([]float32, DIM), make([]float32, DIM) //BERT output vectors
 
-	startVector, endVector := make([]float32, dim), make([]float32, dim) //BERT output vectors
-
-	//BERT has limited input vector dimension, so need to know which part of the full context was used so it can be decoded later
-	subContextStart, subContextEnd := 0, len(contextTokens)
-
-	if len(queryTokens)+len(contextTokens)+3 > dim { //+3 for control tokens in BERT input
+	if len(queryTokens)+len(contextTokens)+3 > DIM { //+3 for control tokens in BERT input, limited BERT dimension so need check
 		log.Println("Long context")
-		startVector, endVector, subContextStart, subContextEnd = longContextForward(queryTokens, contextTokens)
+		//context is reduced to part of original
+		startVector, endVector, contextTokens = longContextForward(queryTokens, contextTokens)
 	} else {
 		log.Println("Short context")
 		startVector, endVector = forward(makeInputIDs(queryTokens, contextTokens), makeAttentionMask(len(queryTokens), len(contextTokens)))
 	}
 
-	log.Println(contextTokens[subContextStart:subContextEnd])
+	log.Println(contextTokens)
 
 	//makes probability distributions for start and end positions of answer
 	startVector = softmax(startVector)
 	endVector = softmax(endVector)
 
-	/*start and end tokens are the start and end indicies of the answer span of the context
-	the resulting indicies are relative to contextTokens, and not the BERT output vectors
+	/*start and end tokens are the start and end indices of the answer span of the context
+	the resulting indices are relative to contextTokens, and not the BERT output vectors
 	this is because contextTokens contains the encoded tokens, whereas BERT outputs are only weights*/
-	startToken := argmax(startVector) - len(queryTokens) - 1
-	endToken := argmax(endVector[startToken:]) + startToken - len(queryTokens)
+	startToken := argmax(startVector) - len(queryTokens) - 2
 
-	/*at this point, start and end tokens are for the wordpieces, which would give answer of "129 ##5" instead of "1295"
-	the wordpiece indicies are converted to "regular" tokenization (whole word tokenization) indicies
-	this prevents words from being cut off and decodes the wordpiece tokens to their full words*/
-	startToken = matchingTokenPosition(piecesPerToken[subContextStart:subContextEnd], startToken)
-	endToken = matchingTokenPosition(piecesPerToken[subContextStart:subContextEnd], endToken)
+	if startToken < 0 {
+		return "Can't find answer"
+	}
+
+	endToken := argmax(endVector[startToken:]) + startToken - len(queryTokens) - 1
 
 	log.Printf("Found answer span: %d --> %d", startToken, endToken)
 
-	answer := strings.Join(baseTokenize(context)[subContextStart:subContextEnd][startToken:endToken], " ")
-	log.Println("Query: " + query)
-	log.Println("Answer: " + answer)
-	return answer
+	if endToken-startToken > 20 {
+		endToken = startToken + 20
+		log.Println("Clipping answer")
+	}
+
+	return tokensToEnglish(contextTokens[startToken:endToken])
 }
 
 //forward runs the model
@@ -92,26 +87,23 @@ func forward(inputIDs []int32, attentionMask []int32) ([]float32, []float32) {
 }
 
 //longContextForward handles forwarding for contexts longer than dimension of BERT
-func longContextForward(queryTokens []string, contextTokens []string) ([]float32, []float32, int, int) {
-	chunkSize := dim - len(queryTokens) - 3 //control tokens
-
-	highestStartEnd := float32(math.Inf(-1)) //highest sum of BERT's confidence of answer span (starts -Inf)
-	startVector, endVector := make([]float32, dim), make([]float32, dim)
-	subContextStart, subContextEnd := 0, len(contextTokens) //context from which the highest confidence of answer was found
+func longContextForward(queryTokens []string, contextTokens []string) ([]float32, []float32, []string) {
+	chunkSize := DIM - len(queryTokens) - 3 //control tokens, chunks needed to reduce context dimension
+	startVector, endVector := make([]float32, DIM), make([]float32, DIM)
+	highestConfidence := float32(math.Inf(-1)) //highest sum of BERT's confidence of answer span
 
 	for i := 0; i < len(contextTokens); i += chunkSize {
-		var tempContext []string
+		var tempContextTokens []string
 
-		//reduces size of context to fit in BERT input
+		//used for last chunk where there aren't enough tokens for full chunk
 		if len(contextTokens)-i < chunkSize {
-			//used for last chunk where there aren't enough tokens for full chunk
-			tempContext = contextTokens[i : len(contextTokens)-1]
+			tempContextTokens = contextTokens[i : len(contextTokens)-1]
 		} else {
-			tempContext = contextTokens[i : i+chunkSize]
+			tempContextTokens = contextTokens[i : i+chunkSize]
 		}
 
 		//start and end vectors for current subcontext
-		tempStart, tempEnd := forward(makeInputIDs(queryTokens, tempContext), makeAttentionMask(len(queryTokens), len(tempContext)))
+		tempStart, tempEnd := forward(makeInputIDs(queryTokens, tempContextTokens), makeAttentionMask(len(queryTokens), len(tempContextTokens)))
 
 		startToken := argmax(tempStart)
 		endToken := argmax(tempEnd[startToken:]) + startToken
@@ -119,32 +111,26 @@ func longContextForward(queryTokens []string, contextTokens []string) ([]float32
 
 		log.Printf("Confidence: %f", tempContextScore)
 
-		if tempContextScore > highestStartEnd {
+		if tempContextScore > highestConfidence {
 			startVector, endVector = tempStart, tempEnd
-
-			if len(contextTokens)-i < chunkSize {
-				subContextStart, subContextEnd = i, len(contextTokens)-1
-			} else {
-				subContextStart, subContextEnd = i, i+chunkSize
-			}
-
-			highestStartEnd = tempContextScore
+			contextTokens = tempContextTokens
+			highestConfidence = tempContextScore
 		}
 	}
 
-	return startVector, endVector, subContextStart, subContextEnd
+	return startVector, endVector, contextTokens
 }
 
 //makeInputIDs encodes query and context into BERT readable format
 func makeInputIDs(query []string, context []string) []int32 {
-	result := make([]int32, 0, dim)
+	result := make([]int32, 0, DIM)
 	result = append(result, 102) //[CLS]
 	result = append(result, encodeTokens(query)...)
 	result = append(result, 103) //[SEP]
 	result = append(result, encodeTokens(context)...)
 	result = append(result, 103) //[SEP]
 
-	pad := make([]int32, dim-len(result))
+	pad := make([]int32, DIM-len(result))
 	for i := range pad {
 		pad[i] = 1 //[PAD]
 	}
@@ -169,7 +155,7 @@ func encodeTokens(tokens []string) []int32 {
 
 //makeAttentionMask creates attention mask given query and context lengths
 func makeAttentionMask(queryLength int, contextLength int) []int32 {
-	mask := make([]int32, dim)
+	mask := make([]int32, DIM)
 
 	for i := 0; i < queryLength+contextLength+3; i++ {
 		mask[i] = 1
@@ -195,7 +181,7 @@ func softmax(vector []float32) []float32 {
 
 //argmax finds index with the highest value
 func argmax(vector []float32) int {
-	maxValue := float32(0)
+	maxValue := float32(math.Inf(-1))
 	maxIndex := 0
 
 	for i, value := range vector {
@@ -217,18 +203,4 @@ func sum32(values []float32) float32 {
 	}
 
 	return result
-}
-
-//matchingTokenPosition finds the index of a basic tokenized token given an index of a wordpiece token (see askBert)
-func matchingTokenPosition(piecesPerToken []int, piecePosition int) int {
-	total := 0
-
-	for i, pieceCount := range piecesPerToken {
-		total += pieceCount
-		if total >= piecePosition {
-			return i
-		}
-	}
-
-	return -1 //shouldn't get to this
 }

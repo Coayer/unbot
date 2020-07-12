@@ -1,6 +1,7 @@
 package wikiQA
 
 import (
+	"github.com/Coayer/unbot/internal/utils"
 	"hash/fnv"
 	"log"
 	"math"
@@ -9,7 +10,6 @@ import (
 
 //getRelevantArticle finds the index of the two most relevant articles
 func getRelevantArticle(articles *[]article, query string) (int, int) {
-	log.Println("Creating hashed bigrams")
 	hashedQuery, hashedArticles := articleQueryBigrams(query, articles)
 
 	idfValues := idf(hashedQuery, hashedArticles)
@@ -51,8 +51,8 @@ func bm25(query []int, article []int, idfValues []float64, avgDocLength float64,
 //bestTwoScores determines the indices of the highest two values of a list
 func bestTwoScores(scores []float64) (int, int) {
 	var bestIndex, secondBestIndex int
-	highScore := -1000.0
-	secondScore := -1000.0
+	highScore := math.Inf(-1)
+	secondScore := math.Inf(-1)
 
 	for i, score := range scores {
 		if score > highScore {
@@ -115,7 +115,7 @@ func termFreq(term int, document []int) int {
 
 //articleQueryBigrams produces bigram representations of a query and articles
 func articleQueryBigrams(query string, articles *[]article) ([]int, *[][]int) {
-	queryTokens := baseTokenize(query)
+	queryTokens := utils.BaseTokenize(query)
 	queryBigrams := hashBigrams(queryTokens)
 
 	articleBigrams := make([][]int, len(*articles))

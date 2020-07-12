@@ -6,6 +6,7 @@ import (
 	"log"
 	"math"
 	"strconv"
+	"strings"
 )
 
 func Evaluate(query string) string {
@@ -49,7 +50,18 @@ func evaluateExpression(expression []string) string {
 		expression = append(expression, tempSlice...)
 	}
 
-	return result
+	return formatResult(result)
+}
+
+func formatResult(result string) string {
+	decimalSplit := strings.Split(result, ".")
+	fmt.Println(decimalSplit)
+
+	if decimalSplit[1][0:2] == "00" {
+		return decimalSplit[0]
+	} else {
+		return result
+	}
 }
 
 func calculate(expression []string) string {

@@ -3,12 +3,26 @@ package main
 import (
 	"fmt"
 	"github.com/Coayer/unbot/internal/calculator"
+	"github.com/Coayer/unbot/internal/weather"
+	"strings"
+
+	//"github.com/Coayer/unbot/internal/wikiQA"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
+	"regexp"
 	"syscall"
 )
+
+/*
+TODO
+
+BM25 tuning
+Weather package
+Conversion package
+Plane spotting package
+*/
 
 func init() {
 	c := make(chan os.Signal)
@@ -31,10 +45,24 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		query := r.URL.Query().Get("query")
 
 		if query == "" {
-			fmt.Fprint(w, "Please repeat your query")
+			log.Println("Ping received")
 		} else {
-			//wikiQA.AskWiki(query)
-			fmt.Fprint(w, calculator.Evaluate(query))
+			log.Println(query)
+			result := getResponse(query)
+			log.Println(result)
+			fmt.Fprint(w, result)
 		}
+	}
+}
+
+var calculatorRegex = regexp.MustCompile("\\d+(\\.\\d+)? (-|\\+|x|\\/|\\^)")
+
+func getResponse(query string) string {
+	if calculatorRegex.MatchString(query) {
+		return calculator.Evaluate(query)
+	} else if strings.Contains(query, "weather") {
+		return weather.GetWeather()
+	} else {
+		return "ming" //wikiQA.AskWiki(query)
 	}
 }

@@ -2,9 +2,8 @@ package wikiQA
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"github.com/Coayer/unbot/internal/utils"
 	"log"
-	"net/http"
 	"strings"
 )
 
@@ -41,34 +40,14 @@ func getArticles(query string) *[]article {
 	searchURL := constructTitleSearch(query)
 	log.Println(searchURL)
 
-	searchResults := httpGet(searchURL)
+	searchResults := utils.HttpGet(searchURL)
 	titles := parseTitles(searchResults)
 	log.Println(titles)
 
 	articlesURL := constructArticleFetch(titles)
 	log.Println(articlesURL)
 
-	return parseArticles(httpGet(articlesURL))
-}
-
-//performs GET request on given URL
-func httpGet(url string) []byte {
-	resp, err := http.Get(url)
-	if resp != nil {
-		defer resp.Body.Close()
-	}
-
-	if err != nil {
-		log.Println(err)
-		return nil
-	}
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Println(err)
-		return nil
-	}
-	return body
+	return parseArticles(utils.HttpGet(articlesURL))
 }
 
 //parses list of titles from JSON
@@ -100,7 +79,7 @@ func parseArticles(bytes []byte) *[]article {
 	for _, page := range response.Query.Pages {
 		articles = append(articles, article{title: page.Title,
 			content: page.Extract,
-			tokens:  baseTokenize(page.Extract)})
+			tokens:  utils.BaseTokenize(page.Extract)})
 	}
 
 	return &articles

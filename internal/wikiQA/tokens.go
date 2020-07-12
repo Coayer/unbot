@@ -43,6 +43,20 @@ func loadVocab() *vocabulary {
 	return &vocabulary{encodeMap: encode, vocabMap: check}
 }
 
+func tokensToEnglish(tokens []string) string {
+	var result strings.Builder
+
+	for _, token := range tokens {
+		if token[0:2] == "##" {
+			result.WriteString(token[2:])
+		} else {
+			result.WriteString(" " + token)
+		}
+	}
+
+	return result.String()
+}
+
 //tokenize does full wordpiece tokenization on a sequence
 func tokenize(sequence string) []string {
 	var result []string
@@ -54,23 +68,6 @@ func tokenize(sequence string) []string {
 	}
 
 	return result
-}
-
-//splits sequence into BERT optimised pieces, with the number of wordpieces per token (needed for decoding context)
-func tokenizePiecesCount(sequence string) ([]string, []int) {
-	var result []string
-	var wordpieceLengths []int
-
-	for _, token := range baseTokenize(sequence) {
-		wordpieceTokens := wordPieceTokenizer(token)
-		wordpieceLengths = append(wordpieceLengths, len(wordpieceTokens))
-
-		for _, piece := range wordpieceTokens {
-			result = append(result, piece)
-		}
-	}
-
-	return result, wordpieceLengths
 }
 
 //splits a single token into pieces if it contains subwords from vocabulary
