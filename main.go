@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/Coayer/unbot/internal/calculator"
+	"github.com/Coayer/unbot/internal/plane"
 	"github.com/Coayer/unbot/internal/weather"
 	"strings"
 
@@ -58,10 +59,12 @@ func handler(w http.ResponseWriter, r *http.Request) {
 var calculatorRegex = regexp.MustCompile("\\d+(\\.\\d+)? (-|\\+|x|\\/|\\^)")
 
 func getResponse(query string) string {
-	if calculatorRegex.MatchString(query) {
+	if strings.Contains(query, "plane") {
+		return plane.GetPlane()
+	} else if calculatorRegex.MatchString(query) {
 		return calculator.Evaluate(query)
 	} else if strings.Contains(query, "weather") {
-		return weather.GetWeather()
+		return weather.GetWeather(query)
 	} else {
 		return "ming" //wikiQA.AskWiki(query)
 	}
