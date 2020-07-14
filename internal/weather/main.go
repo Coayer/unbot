@@ -6,32 +6,25 @@ import (
 	"github.com/Coayer/unbot/internal/utils"
 	"io/ioutil"
 	"log"
+	"math"
 	"os"
 	"strings"
 	"time"
 )
 
-var apiURL = fmt.Sprintf("https://api.openweathermap.org/data/2.5/onecall?units=metric&lat=%f&lon=%f&exclude=minutely,hourly&appid=%s",
+var apiURL = fmt.Sprintf("https://api.openweathermap.org/data/2.5/onecall?units=metric&lat=%f&lon=%f&exclude=minutely,hourly,current&appid=%s",
 	utils.LAT, utils.LON, loadKey())
 
-type OWMFetch struct {
-	Current struct {
-		Temp     float32
-		Humidity uint8
-		Weather  []struct {
-			Description string
-		}
+type DailyWeather struct {
+	Temp struct {
+		Day   float64
+		Night float64
+		Eve   float64
+		Morn  float64
 	}
-	Daily []struct {
-		Temp struct {
-			Day   float32
-			Night float32
-			Eve   float32
-			Morn  float32
-		}
-		Weather []struct {
-			Description string
-		}
+	Humidity uint8
+	Weather  []struct {
+		Description string
 	}
 }
 
@@ -41,51 +34,45 @@ func GetWeather(query string) string {
 	weather := parseWeather(utils.HttpGet(apiURL))
 	day := int(time.Now().Weekday())
 
-	var description strings.Builder
-	var result string
-
 	if strings.Contains(query, "now") || strings.Contains(query, "today") {
-		for _, condition := range weather.Current.Weather {
-			description.WriteString(condition.Description + " ")
-		}
-
-		result = fmt.Sprintf("%s, %d degrees, %d percent humidity", description.String(), int(weather.Current.Temp),
-			weather.Current.Humidity)
+		return generateDescription(weather[0])
 	} else if strings.Contains(query, "tomorrow") || strings.Contains(query, time.Weekday(day+1).String()) {
-		for _, condition := range weather.Daily[1].Weather {
-			description.WriteString(condition.Description + " ")
-		}
-
-		result = fmt.Sprintf("%s, %d degrees", description.String(), int(weather.Daily[1].Temp.Day))
+		return generateDescription(weather[1])
 	} else {
 		for i := 1; i <= 7; i++ {
 			//owm gives weather relative to current day, not to start of week
 			if strings.Contains(query, strings.ToLower(time.Weekday((day+i)%7).String())) {
-				for _, condition := range weather.Daily[i].Weather {
-					description.WriteString(condition.Description + " ")
-				}
-
-				result = fmt.Sprintf("%s, %d degrees", description.String(), int(weather.Daily[i].Temp.Day))
-				break
+				return generateDescription(weather[i])
 			}
 		}
 	}
 
-	return result
+	return "No weather found"
 }
 
-func parseWeather(bytes []byte) OWMFetch {
-	var response OWMFetch
+func generateDescription(weather DailyWeather) string {
+	var description strings.Builder
+
+	for _, condition := range weather.Weather {
+		description.WriteString(condition.Description + " ")
+	}
+
+	return fmt.Sprintf("%s, %d degrees, %d percent humidity", description.String(), int(math.Round(weather.Temp.Day)),
+		weather.Humidity)
+}
+
+func parseWeather(bytes []byte) []DailyWeather {
+	var response struct{ Daily []DailyWeather }
 
 	if err := json.Unmarshal(bytes, &response); err != nil {
 		log.Println(err)
 	}
 
-	return response
+	return response.Daily
 }
 
 func loadKey() string {
-	file, err := os.Open("owm_key.txt")
+	file, err := os.Open("data/owm_key.txt")
 	if err != nil {
 		log.Fatal(err)
 	}

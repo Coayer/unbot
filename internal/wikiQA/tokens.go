@@ -18,7 +18,7 @@ type vocabulary struct {
 
 //loadVocab loads BERT vocabulary from text file
 func loadVocab() *vocabulary {
-	file, err := os.Open("internal/wikiQA/vocab.txt")
+	file, err := os.Open("data/vocab.txt")
 	if err != nil {
 		log.Fatal(err)
 	}

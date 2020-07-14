@@ -9,6 +9,7 @@ import (
 	"strings"
 )
 
+//Evaluate is used by calling code to run the package
 func Evaluate(query string) string {
 	expression := parseExpression(query)
 	if len(expression) == 0 {
@@ -18,6 +19,7 @@ func Evaluate(query string) string {
 	}
 }
 
+//evaluateExpression determines the result of an arithmetic expression
 func evaluateExpression(expression []string) string {
 	operatorPrecedence := map[string]uint8{"": 0, "-": 1, "+": 2, "x": 3, "/": 4, "^": 5}
 	result := ""
@@ -53,6 +55,7 @@ func evaluateExpression(expression []string) string {
 	return formatResult(result)
 }
 
+//formatResult prevents trailing zeros from being returned to the user
 func formatResult(result string) string {
 	decimalSplit := strings.Split(result, ".")
 	fmt.Println(decimalSplit)
@@ -64,6 +67,7 @@ func formatResult(result string) string {
 	}
 }
 
+//calculate reduces an expression comprised of an operator and two operands
 func calculate(expression []string) string {
 	x1, _ := strconv.ParseFloat(expression[0], 64)
 	x2, _ := strconv.ParseFloat(expression[2], 64)
@@ -85,6 +89,7 @@ func calculate(expression []string) string {
 	}
 }
 
+//parseExpression removes additional tokens from a raw query
 func parseExpression(query string) []string {
 	tokens := utils.BaseTokenize(query)
 	startToken := 0
@@ -111,6 +116,7 @@ func parseExpression(query string) []string {
 	}
 }
 
+//isNumeric checks if a token is a number
 func isNumeric(token string) bool {
 	for _, char := range token {
 		if (char < '0' || char > '9') && char != '.' {
@@ -120,10 +126,7 @@ func isNumeric(token string) bool {
 	return true
 }
 
+//isOperator checks if a token is an operator the calculator can use
 func isOperator(token string) bool {
-	if len(token) == 1 && (token == "+" || token == "-" || token == "x" || token == "/" || token == "^") {
-		return true
-	} else {
-		return false
-	}
+	return len(token) == 1 && (token == "+" || token == "-" || token == "x" || token == "/" || token == "^")
 }

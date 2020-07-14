@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-var airlines = loadCsv("internal/plane/data/airlines.csv")
+var airlines = loadCsv("data/airlines.csv")
 
 var apiURL = fmt.Sprintf("https://opensky-network.org/api/states/all?lamin=%f&lomin=%f&lamax=%f&lomax=%f",
 	utils.LAT-0.3, utils.LON-0.3, utils.LAT+0.3, utils.LON+0.3)
@@ -19,6 +19,7 @@ type OpenSkyFetch struct {
 	States [][]string
 }
 
+//GetPlane is used by calling code to run the package
 func GetPlane() string {
 	log.Println(apiURL)
 
@@ -31,6 +32,7 @@ func GetPlane() string {
 	return result.String()
 }
 
+//formatCallsign splits a callsign into the full airline name and flight number
 func formatCallsign(callsign string) string {
 	if callsign == "" {
 		return "No callsign recieved"
@@ -38,15 +40,14 @@ func formatCallsign(callsign string) string {
 
 	icaoAirline, flightNumber := callsign[:3], callsign[3:]
 
-	for _, entry := range airlines {
-		if icaoAirline == entry[1] {
-			return entry[2] + " " + flightNumber
-		}
+	if airline, exists := airlines[icaoAirline]; exists {
+		return airline + " " + flightNumber
+	} else {
+		return "Airline not found"
 	}
-
-	return "Can't find airline"
 }
 
+//parsePlanes is used to unmarshal the OpenSky JSON response
 func parsePlanes(bytes []byte) OpenSkyFetch {
 	var response OpenSkyFetch
 
@@ -57,7 +58,8 @@ func parsePlanes(bytes []byte) OpenSkyFetch {
 	return response
 }
 
-func loadCsv(path string) [][]string {
+//loadCsv is used to load the ICAO airline codes to their full names
+func loadCsv(path string) map[string]string {
 	file, err := os.Open(path)
 	if err != nil {
 		log.Fatal(err)
@@ -70,5 +72,11 @@ func loadCsv(path string) [][]string {
 		log.Fatal(err)
 	}
 
-	return records
+	hashTable := make(map[string]string)
+
+	for _, line := range records {
+		hashTable[line[0]] = line[1]
+	}
+
+	return hashTable
 }
