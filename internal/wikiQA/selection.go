@@ -1,6 +1,7 @@
 package wikiQA
 
 import (
+	"fmt"
 	"github.com/Coayer/unbot/internal/utils"
 	"hash/fnv"
 	"log"
@@ -25,10 +26,11 @@ func getRelevantArticle(articles *[]article, query string) (int, int) {
 	}
 	wait.Wait()
 
-	log.Printf("Article BM25 scores: %v", scores)
-	bestIndex, secondBestIndex := bestTwoScores(scores)
-	log.Println("Most relevant articles: " + (*articles)[bestIndex].title + ", " + (*articles)[secondBestIndex].title)
+	for i, score := range scores {
+		log.Println((*articles)[i].title + ": " + fmt.Sprintf("%f", score))
+	}
 
+	bestIndex, secondBestIndex := bestTwoScores(scores)
 	return bestIndex, secondBestIndex
 }
 
@@ -38,13 +40,15 @@ func bm25(query []int, article []int, idfValues []float64, avgDocLength float64,
 	b := 0.75
 
 	summands := make([]float64, len(idfValues))
-	repeatedDenomintaorPart := 1 - b + b*float64(len(article))/avgDocLength //saves computation as it is repeated
+	repeatedDenominatorPart := 1 - b + b*float64(len(article))/avgDocLength //saves computation as it is repeated
 
 	for i, qi := range query {
 		tf := float64(termFreq(qi, article))
-		summands[i] = idfValues[i] * (tf * (k + 1) / (tf + k*repeatedDenomintaorPart))
+		summands[i] = idfValues[i] * (tf * (k + 1) / (tf + k*repeatedDenominatorPart))
 	}
-	(*scores)[scoresIndex] = sum(summands) // math.Pow(2.718, -0.1 * float64(scoresInd))<--experiment to use wiki relevance ranking to inform score
+	(*scores)[scoresIndex] = sum(summands)
+	//+ math.Pow(math.E, 1-0.1*float64(scoresIndex))
+	//experiment to use wiki relevance ranking to inform score, but order from wikipedia is page number
 	wait.Done()
 }
 
@@ -57,6 +61,7 @@ func bestTwoScores(scores []float64) (int, int) {
 	for i, score := range scores {
 		if score > highScore {
 			secondBestIndex = bestIndex
+			secondScore = highScore
 			bestIndex = i
 			highScore = score
 		} else if score > secondScore {

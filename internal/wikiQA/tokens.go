@@ -47,7 +47,7 @@ func tokensToEnglish(tokens []string) string {
 	var result strings.Builder
 
 	for _, token := range tokens {
-		if token[0:2] == "##" {
+		if len(token) != 1 && token[0:2] == "##" {
 			result.WriteString(token[2:])
 		} else {
 			result.WriteString(" " + token)

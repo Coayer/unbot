@@ -5,6 +5,7 @@ import (
 	"github.com/Coayer/unbot/internal/utils"
 	"log"
 	"strings"
+	"unicode"
 )
 
 const wikipediaBaseURL string = "https://en.wikipedia.org/w/api.php?action=query&format=json&"
@@ -61,9 +62,20 @@ func parseTitles(bytes []byte) []string {
 	}
 
 	for _, article := range response.Query.Search {
-		titles = append(titles, article.Title)
+		if isASCII(article.Title) {
+			titles = append(titles, article.Title)
+		}
 	}
 	return titles
+}
+
+func isASCII(title string) bool {
+	for i := 0; i < len(title); i++ {
+		if title[i] > unicode.MaxASCII {
+			return false
+		}
+	}
+	return true
 }
 
 //parses articles from JSON

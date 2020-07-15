@@ -24,33 +24,26 @@ func loadModel() *tf.SavedModel {
 //askBert is used to ask the BERT model a question
 func askBert(query string, context string) string {
 	queryTokens, contextTokens := tokenize(query), tokenize(context)
-	startVector, endVector := make([]float32, DIM), make([]float32, DIM) //BERT output vectors
 
-	if len(queryTokens)+len(contextTokens)+3 > DIM { //+3 for control tokens in BERT input, limited BERT dimension so need check
-		log.Println("Long context")
-		//context is reduced to part of original
-		startVector, endVector, contextTokens = longContextForward(queryTokens, contextTokens)
-	} else {
-		log.Println("Short context")
-		startVector, endVector = forward(makeInputIDs(queryTokens, contextTokens), makeAttentionMask(len(queryTokens), len(contextTokens)))
-	}
+	//context is reduced to part of original
+	startToken, endToken, contextTokens := longContextForward(queryTokens, contextTokens)
 
 	log.Println(contextTokens)
-
-	//makes probability distributions for start and end positions of answer
-	startVector = softmax(startVector)
-	endVector = softmax(endVector)
 
 	/*start and end tokens are the start and end indices of the answer span of the context
 	the resulting indices are relative to contextTokens, and not the BERT output vectors
 	this is because contextTokens contains the encoded tokens, whereas BERT outputs are only weights*/
-	startToken := argmax(startVector) - len(queryTokens) - 2
+	startToken = startToken - len(queryTokens) - 2
 
 	if startToken < 0 {
 		return "Can't find answer"
 	}
 
-	endToken := argmax(endVector[startToken:]) + startToken - len(queryTokens) - 1
+	endToken = endToken - len(queryTokens) - 1
+
+	if endToken < 0 {
+		return "Can't find answer"
+	}
 
 	log.Printf("Found answer span: %d --> %d", startToken, endToken)
 
@@ -58,7 +51,6 @@ func askBert(query string, context string) string {
 		endToken = startToken + 20
 		log.Println("Clipping answer")
 	}
-
 	return tokensToEnglish(contextTokens[startToken:endToken])
 }
 
@@ -87,9 +79,10 @@ func forward(inputIDs []int32, attentionMask []int32) ([]float32, []float32) {
 }
 
 //longContextForward handles forwarding for contexts longer than dimension of BERT
-func longContextForward(queryTokens []string, contextTokens []string) ([]float32, []float32, []string) {
+func longContextForward(queryTokens []string, contextTokens []string) (int, int, []string) {
 	chunkSize := DIM - len(queryTokens) - 3 //control tokens, chunks needed to reduce context dimension
-	startVector, endVector := make([]float32, DIM), make([]float32, DIM)
+	var startToken, endToken int
+	var bestContextTokens []string
 	highestConfidence := float32(math.Inf(-1)) //highest sum of BERT's confidence of answer span
 
 	for i := 0; i < len(contextTokens); i += chunkSize {
@@ -97,28 +90,27 @@ func longContextForward(queryTokens []string, contextTokens []string) ([]float32
 
 		//used for last chunk where there aren't enough tokens for full chunk
 		if len(contextTokens)-i < chunkSize {
-			tempContextTokens = contextTokens[i : len(contextTokens)-1]
+			tempContextTokens = contextTokens[i:]
 		} else {
 			tempContextTokens = contextTokens[i : i+chunkSize]
 		}
-
 		//start and end vectors for current subcontext
-		tempStart, tempEnd := forward(makeInputIDs(queryTokens, tempContextTokens), makeAttentionMask(len(queryTokens), len(tempContextTokens)))
+		tempStartVector, tempEndVector := forward(makeInputIDs(queryTokens, tempContextTokens), makeAttentionMask(len(queryTokens), len(tempContextTokens)))
 
-		startToken := argmax(tempStart)
-		endToken := argmax(tempEnd[startToken:]) + startToken
-		tempContextScore := tempStart[startToken] + tempEnd[endToken] //confidence score indicating how much BERT thinks there is an answer
+		tempStartToken := argmax(tempStartVector)
+		tempEndToken := argmax(tempEndVector[tempStartToken:]) + tempStartToken
+		tempContextScore := tempStartVector[tempStartToken] + tempEndVector[tempEndToken] //confidence score indicating how much BERT thinks there is an answer
 
 		log.Printf("Confidence: %f", tempContextScore)
 
 		if tempContextScore > highestConfidence {
-			startVector, endVector = tempStart, tempEnd
-			contextTokens = tempContextTokens
+			startToken, endToken = tempStartToken, tempEndToken
+			bestContextTokens = tempContextTokens
 			highestConfidence = tempContextScore
 		}
 	}
 
-	return startVector, endVector, contextTokens
+	return startToken, endToken, bestContextTokens
 }
 
 //makeInputIDs encodes query and context into BERT readable format
@@ -167,7 +159,7 @@ func makeAttentionMask(queryLength int, contextLength int) []int32 {
 //softmax performs softmax function on vector
 func softmax(vector []float32) []float32 {
 	for i, weight := range vector {
-		vector[i] = float32(math.Pow(2.7182818284, float64(weight)))
+		vector[i] = float32(math.Pow(math.E, float64(weight)))
 	}
 
 	total := sum32(vector)
