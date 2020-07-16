@@ -1,4 +1,4 @@
-package wikiQA
+package knowledge
 
 import (
 	"bufio"

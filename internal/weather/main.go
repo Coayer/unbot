@@ -16,7 +16,9 @@ var apiURL = fmt.Sprintf("https://api.openweathermap.org/data/2.5/onecall?units=
 	utils.LAT, utils.LON, loadKey())
 
 type DailyWeather struct {
-	Temp struct {
+	Sunrise int
+	Sunset  int
+	Temp    struct {
 		Day   float64
 		Night float64
 		Eve   float64
@@ -35,14 +37,14 @@ func GetWeather(query string) string {
 	day := int(time.Now().Weekday())
 
 	if strings.Contains(query, "now") || strings.Contains(query, "today") {
-		return generateDescription(weather[0])
+		return generateDescription(weather[0], query)
 	} else if strings.Contains(query, "tomorrow") || strings.Contains(query, time.Weekday(day+1).String()) {
-		return generateDescription(weather[1])
+		return generateDescription(weather[1], query)
 	} else {
 		for i := 1; i <= 7; i++ {
 			//owm gives weather relative to current day, not to start of week
 			if strings.Contains(query, strings.ToLower(time.Weekday((day+i)%7).String())) {
-				return generateDescription(weather[i])
+				return generateDescription(weather[i], query)
 			}
 		}
 	}
@@ -50,15 +52,37 @@ func GetWeather(query string) string {
 	return "No weather found"
 }
 
-func generateDescription(weather DailyWeather) string {
-	var description strings.Builder
+func generateDescription(weather DailyWeather, query string) string {
+	if strings.Contains(query, "sunset") {
+		return formatTime(weather.Sunset)
+	} else if strings.Contains(query, "sunrise") {
+		return formatTime(weather.Sunrise)
+	} else {
+		var description strings.Builder
 
-	for _, condition := range weather.Weather {
-		description.WriteString(condition.Description + " ")
+		for _, condition := range weather.Weather {
+			description.WriteString(condition.Description + " ")
+		}
+
+		var temperature float64
+
+		if strings.Contains(query, "morning") {
+			temperature = weather.Temp.Morn
+		} else if strings.Contains(query, "evening") {
+			temperature = weather.Temp.Eve
+		} else if strings.Contains(query, "night") {
+			temperature = weather.Temp.Night
+		} else {
+			temperature = weather.Temp.Day
+		}
+
+		return fmt.Sprintf("%s, %d degrees, %d percent humidity", description.String(), int(math.Round(temperature)),
+			weather.Humidity)
 	}
+}
 
-	return fmt.Sprintf("%s, %d degrees, %d percent humidity", description.String(), int(math.Round(weather.Temp.Day)),
-		weather.Humidity)
+func formatTime(epoch int) string {
+	return time.Unix(int64(epoch), 0).Format("15:04")
 }
 
 func parseWeather(bytes []byte) []DailyWeather {

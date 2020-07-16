@@ -1,4 +1,4 @@
-package wikiQA
+package knowledge
 
 func AskWiki(query string) string {
 	articles := getArticles(query)

@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 	"github.com/Coayer/unbot/internal/calculator"
+	"github.com/Coayer/unbot/internal/knowledge"
 	"github.com/Coayer/unbot/internal/plane"
 	"github.com/Coayer/unbot/internal/weather"
-	"github.com/Coayer/unbot/internal/wikiQA"
 	"log"
 	"net/http"
 	"os"
@@ -18,8 +18,7 @@ import (
 /*
 TODO
 
-Documentation
-BM25 tuning
+BM25 stop 0.000
 Config file -- location, owm key
 Conversion package
 */
@@ -30,7 +29,7 @@ func init() {
 	go func() {
 		<-c
 		log.Println("Closing Bert model session")
-		wikiQA.Model.Session.Close()
+		knowledge.Model.Session.Close()
 		os.Exit(0)
 	}()
 }
@@ -55,16 +54,16 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-var calculatorRegex = regexp.MustCompile("\\d+(\\.\\d+)? [-+x\\/^]")
+var calculatorRegex = regexp.MustCompile("\\d+(\\.\\d+)? [-+x/^]")
 
 func getResponse(query string) string {
 	if strings.Contains(query, "plane") {
 		return plane.GetPlane()
-	} else if strings.Contains(query, "weather") {
+	} else if strings.Contains(query, "weather") || strings.Contains(query, "sunset") || strings.Contains(query, "sunrise") {
 		return weather.GetWeather(query)
 	} else if calculatorRegex.MatchString(query) {
 		return calculator.Evaluate(query)
 	} else {
-		return wikiQA.AskWiki(query)
+		return knowledge.AskWiki(query)
 	}
 }
