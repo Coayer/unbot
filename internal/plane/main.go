@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"github.com/Coayer/unbot/internal/utils"
 	"log"
+	"math"
 	"os"
-	"strings"
 )
 
 var airlines = loadCsv("data/airlines.csv")
@@ -16,20 +16,30 @@ var apiURL = fmt.Sprintf("https://opensky-network.org/api/states/all?lamin=%f&lo
 	utils.LAT-0.3, utils.LON-0.3, utils.LAT+0.3, utils.LON+0.3)
 
 type OpenSkyFetch struct {
-	States [][]string
+	States [][17]interface{}
 }
 
 //GetPlane is used by calling code to run the package
 func GetPlane() string {
 	log.Println(apiURL)
-
 	stateVectors := parsePlanes(utils.HttpGet(apiURL))
-	var result strings.Builder
+	plane := closestPlane(stateVectors)
+	return formatCallsign(plane[1].(string))
+}
 
+func closestPlane(stateVectors OpenSkyFetch) [17]interface{} {
+	minDistance := math.Inf(1)
+	var plane [17]interface{}
 	for _, vector := range stateVectors.States {
-		result.WriteString(formatCallsign(vector[1]))
+		log.Println(vector[1])
+
+		distance := math.Pow((vector[5].(float64)-utils.LON)*math.Cos(utils.LAT), 2) + math.Pow(vector[6].(float64)-utils.LAT, 2)
+		if distance < minDistance {
+			plane = vector
+			minDistance = distance
+		}
 	}
-	return result.String()
+	return plane
 }
 
 //formatCallsign splits a callsign into the full airline name and flight number
@@ -43,7 +53,7 @@ func formatCallsign(callsign string) string {
 	if airline, exists := airlines[icaoAirline]; exists {
 		return airline + " " + flightNumber
 	} else {
-		return "Airline not found"
+		return callsign
 	}
 }
 

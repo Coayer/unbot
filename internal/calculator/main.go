@@ -58,7 +58,6 @@ func evaluateExpression(expression []string) string {
 //formatResult prevents trailing zeros from being returned to the user
 func formatResult(result string) string {
 	decimalSplit := strings.Split(result, ".")
-	fmt.Println(decimalSplit)
 
 	if decimalSplit[1][0:2] == "00" {
 		return decimalSplit[0]

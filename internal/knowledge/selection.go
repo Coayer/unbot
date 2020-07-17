@@ -155,7 +155,6 @@ func makeBigrams(tokens []string) []string {
 		ngrams[i] = tokens[i]
 		ngrams[i+n-1] = tokens[i-1] + tokens[i]
 	}
-
 	return ngrams
 }
 

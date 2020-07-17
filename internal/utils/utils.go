@@ -5,9 +5,20 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 )
 
-const LAT, LON = 51.5074, 0.1278
+const LAT, LON = 51.5395224, -0.1658538
+
+var stopWords = []string{"i", "me", "my", "myself", "we", "our", "ours", "ourselves", "you", "your", "yours", "yourself",
+	"yourselves", "he", "him", "his", "himself", "she", "her", "hers", "herself", "it", "its", "itself", "they", "them",
+	"their", "theirs", "themselves", "what", "which", "who", "whom", "this", "that", "these", "those", "am", "is", "are",
+	"was", "were", "be", "been", "being", "have", "has", "had", "having", "do", "does", "did", "doing", "a", "an", "the",
+	"and", "but", "if", "or", "because", "as", "until", "while", "of", "at", "by", "for", "with", "about", "against",
+	"between", "into", "through", "during", "before", "after", "above", "below", "to", "from", "up", "down", "in", "out",
+	"on", "off", "over", "under", "again", "further", "then", "once", "here", "there", "when", "where", "why", "how", "all",
+	"any", "both", "each", "few", "more", "most", "other", "some", "such", "no", "nor", "not", "only", "own", "same", "so",
+	"than", "too", "very", "can", "will", "just", "don't", "should", "now"}
 
 //simple wrapper for prose tokenizer
 func BaseTokenize(sequence string) []string {
@@ -27,6 +38,23 @@ func BaseTokenize(sequence string) []string {
 	}
 
 	return result
+}
+
+func RemoveStopWords(query string) string {
+	var cleanedQuery strings.Builder
+
+	for _, token := range BaseTokenize(query) {
+		for i := 0; i < len(stopWords); i++ {
+			if stopWords[i] == token {
+				break
+			}
+			if i == len(stopWords)-1 {
+				cleanedQuery.WriteString(token + " ")
+			}
+		}
+	}
+
+	return cleanedQuery.String()
 }
 
 //performs GET request on given URL

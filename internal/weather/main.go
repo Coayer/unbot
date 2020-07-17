@@ -58,27 +58,31 @@ func generateDescription(weather DailyWeather, query string) string {
 	} else if strings.Contains(query, "sunrise") {
 		return formatTime(weather.Sunrise)
 	} else {
-		var description strings.Builder
-
-		for _, condition := range weather.Weather {
-			description.WriteString(condition.Description + " ")
-		}
-
-		var temperature float64
-
-		if strings.Contains(query, "morning") {
-			temperature = weather.Temp.Morn
-		} else if strings.Contains(query, "evening") {
-			temperature = weather.Temp.Eve
-		} else if strings.Contains(query, "night") {
-			temperature = weather.Temp.Night
-		} else {
-			temperature = weather.Temp.Day
-		}
-
-		return fmt.Sprintf("%s, %d degrees, %d percent humidity", description.String(), int(math.Round(temperature)),
-			weather.Humidity)
+		return weatherDescription(weather, query)
 	}
+}
+
+func weatherDescription(weather DailyWeather, query string) string {
+	var description strings.Builder
+
+	for _, condition := range weather.Weather {
+		description.WriteString(condition.Description + " ")
+	}
+
+	var temperature float64
+
+	if strings.Contains(query, "morning") {
+		temperature = weather.Temp.Morn
+	} else if strings.Contains(query, "evening") {
+		temperature = weather.Temp.Eve
+	} else if strings.Contains(query, "night") {
+		temperature = weather.Temp.Night
+	} else {
+		temperature = weather.Temp.Day
+	}
+
+	return fmt.Sprintf("%s, %d degrees, %d percent humidity", description.String(), int(math.Round(temperature)),
+		weather.Humidity)
 }
 
 func formatTime(epoch int) string {

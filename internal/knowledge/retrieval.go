@@ -10,16 +10,6 @@ import (
 
 const wikipediaBaseURL string = "https://en.wikipedia.org/w/api.php?action=query&format=json&"
 
-var stopWords = []string{"i", "me", "my", "myself", "we", "our", "ours", "ourselves", "you", "your", "yours", "yourself",
-	"yourselves", "he", "him", "his", "himself", "she", "her", "hers", "herself", "it", "its", "itself", "they", "them",
-	"their", "theirs", "themselves", "what", "which", "who", "whom", "this", "that", "these", "those", "am", "is", "are",
-	"was", "were", "be", "been", "being", "have", "has", "had", "having", "do", "does", "did", "doing", "a", "an", "the",
-	"and", "but", "if", "or", "because", "as", "until", "while", "of", "at", "by", "for", "with", "about", "against",
-	"between", "into", "through", "during", "before", "after", "above", "below", "to", "from", "up", "down", "in", "out",
-	"on", "off", "over", "under", "again", "further", "then", "once", "here", "there", "when", "where", "why", "how", "all",
-	"any", "both", "each", "few", "more", "most", "other", "some", "such", "no", "nor", "not", "only", "own", "same", "so",
-	"than", "too", "very", "can", "will", "just", "don't", "should", "now"}
-
 //article stores a Wikipedia article
 type article struct {
 	title   string
@@ -46,9 +36,12 @@ type ArticleFetch struct {
 	}
 }
 
+type DuckDuckGo struct {
+	AbstractText string
+}
+
 //makes a list of complete articles from a query
 func getArticles(query string) *[]article {
-	query = removeStopWords(query)
 	searchURL := constructTitleSearch(query)
 	log.Println(searchURL)
 
@@ -62,21 +55,20 @@ func getArticles(query string) *[]article {
 	return parseArticles(utils.HttpGet(articlesURL))
 }
 
-func removeStopWords(query string) string {
-	var cleanedQuery strings.Builder
+func getDuckDuckGo(query string) string {
+	return parseDuckDuckGo(utils.HttpGet("https://api.duckduckgo.com/?format=json&t=github_coayer_unbot&q=" +
+		formatHTTPQuery(query)))
+}
 
-	for _, token := range utils.BaseTokenize(query) {
-		for i := 0; i < len(stopWords); i++ {
-			if stopWords[i] == token {
-				break
-			}
-			if i == len(stopWords)-1 {
-				cleanedQuery.WriteString(token)
-			}
-		}
+func parseDuckDuckGo(bytes []byte) string {
+	var response DuckDuckGo
+
+	if err := json.Unmarshal(bytes, &response); err != nil {
+		log.Println("No DuckDuckGo answer")
+		return ""
 	}
 
-	return cleanedQuery.String()
+	return response.AbstractText
 }
 
 //parses list of titles from JSON
@@ -132,7 +124,7 @@ func constructTitleSearch(srsearch string) string {
 	srsort := "relevance" //"relevance", "none", "just_match"
 	srlimit := "5"
 
-	return wikipediaBaseURL + "list=search&srsearch=" + strings.ReplaceAll(srsearch, " ", "%20") +
+	return wikipediaBaseURL + "list=search&srsearch=" + formatHTTPQuery(srsearch) +
 		"&srlimit=" + srlimit + "&srqiprofile=" + srqiprofile + "&srwhat=" + srwhat +
 		"&srinfo=&srprop=&srsort=" + srsort
 }
@@ -143,9 +135,7 @@ func constructArticleFetch(titles []string) string {
 	first := true
 
 	for _, title := range titles {
-		if strings.Contains(title, " ") {
-			title = strings.ReplaceAll(title, " ", "%20")
-		}
+		title = formatHTTPQuery(title)
 
 		if !first {
 			fetchTitles += "%7C" + title
@@ -156,4 +146,8 @@ func constructArticleFetch(titles []string) string {
 	}
 
 	return wikipediaBaseURL + "prop=extracts&titles=" + fetchTitles + "&formatversion=2&exintro=1&explaintext=1"
+}
+
+func formatHTTPQuery(query string) string {
+	return strings.ReplaceAll(query, " ", "%20")
 }

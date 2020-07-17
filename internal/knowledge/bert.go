@@ -156,21 +156,6 @@ func makeAttentionMask(queryLength int, contextLength int) []int32 {
 	return mask
 }
 
-//softmax performs softmax function on vector
-func softmax(vector []float32) []float32 {
-	for i, weight := range vector {
-		vector[i] = float32(math.Pow(math.E, float64(weight)))
-	}
-
-	total := sum32(vector)
-
-	for i, weight := range vector {
-		vector[i] = weight / total
-	}
-
-	return vector
-}
-
 //argmax finds index with the highest value
 func argmax(vector []float32) int {
 	maxValue := float32(math.Inf(-1))
@@ -184,15 +169,4 @@ func argmax(vector []float32) int {
 	}
 
 	return maxIndex
-}
-
-//sum32 calculates a sum of a set of float32 values
-func sum32(values []float32) float32 {
-	result := float32(0)
-
-	for _, value := range values {
-		result += value
-	}
-
-	return result
 }
