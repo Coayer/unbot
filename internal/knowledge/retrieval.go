@@ -8,7 +8,7 @@ import (
 	"unicode"
 )
 
-const wikipediaBaseURL string = "https://en.wikipedia.org/w/api.php?action=query&format=json&"
+const WIKIPEDIA string = "https://en.wikipedia.org/w/api.php?action=query&format=json&"
 
 //article stores a Wikipedia article
 type article struct {
@@ -124,7 +124,7 @@ func constructTitleSearch(srsearch string) string {
 	srsort := "relevance" //"relevance", "none", "just_match"
 	srlimit := "5"
 
-	return wikipediaBaseURL + "list=search&srsearch=" + formatHTTPQuery(srsearch) +
+	return WIKIPEDIA + "list=search&srsearch=" + formatHTTPQuery(srsearch) +
 		"&srlimit=" + srlimit + "&srqiprofile=" + srqiprofile + "&srwhat=" + srwhat +
 		"&srinfo=&srprop=&srsort=" + srsort
 }
@@ -145,7 +145,7 @@ func constructArticleFetch(titles []string) string {
 		}
 	}
 
-	return wikipediaBaseURL + "prop=extracts&titles=" + fetchTitles + "&formatversion=2&exintro=1&explaintext=1"
+	return WIKIPEDIA + "prop=extracts&titles=" + fetchTitles + "&formatversion=2&exintro=1&explaintext=1"
 }
 
 func formatHTTPQuery(query string) string {

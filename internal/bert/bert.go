@@ -1,4 +1,4 @@
-package knowledge
+package bert
 
 import (
 	tf "github.com/tensorflow/tensorflow/tensorflow/go"
@@ -22,7 +22,7 @@ func loadModel() *tf.SavedModel {
 }
 
 //askBert is used to ask the BERT model a question
-func askBert(query string, context string) string {
+func AskBert(query string, context string) string {
 	queryTokens, contextTokens := tokenize(query), tokenize(context)
 
 	//context is reduced to part of original
