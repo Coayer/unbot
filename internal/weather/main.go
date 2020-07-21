@@ -4,16 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Coayer/unbot/internal/utils"
-	"io/ioutil"
 	"log"
 	"math"
-	"os"
 	"strings"
 	"time"
 )
 
 var apiURL = fmt.Sprintf("https://api.openweathermap.org/data/2.5/onecall?units=metric&lat=%f&lon=%f&exclude=minutely,hourly,current&appid=%s",
-	utils.LAT, utils.LON, loadKey())
+	utils.Config.Location.Latitude, utils.Config.Location.Longitude, utils.Config.OwmKey)
 
 type DailyWeather struct {
 	Sunrise int
@@ -97,15 +95,4 @@ func parseWeather(bytes []byte) []DailyWeather {
 	}
 
 	return response.Daily
-}
-
-func loadKey() string {
-	file, err := os.Open("data/owm_key.txt")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer file.Close()
-
-	key, _ := ioutil.ReadAll(file)
-	return string(key)
 }

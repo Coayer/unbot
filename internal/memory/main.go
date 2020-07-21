@@ -2,21 +2,57 @@ package memory
 
 import (
 	"encoding/json"
+	"github.com/Coayer/unbot/internal/bert"
 	"github.com/Coayer/unbot/internal/utils"
 	"io/ioutil"
 	"log"
+	"math"
 	"strings"
 	"time"
 )
 
-const DIM = 50
 const MEMORYPATH = "data/memories.json"
-
-//var GloVe = readGloVe()
 
 type Memory struct {
 	Value  string
 	Expiry int64
+}
+
+func Match(query string) bool {
+	memories := readMemories()
+	queryVec := sentence2Vec(utils.RemoveStopWords(query))
+
+	for _, memory := range memories {
+		similarity := cosineSimilarity(queryVec, sentence2Vec(utils.RemoveStopWords(memory.Value)))
+		log.Println(similarity)
+		if similarity > 0.8 {
+			return true
+		}
+	}
+	return false
+}
+
+func cosineSimilarity(a []float32, b []float32) float64 {
+	var dotProduct float32
+	var aSquareSum, bSquareSum float32
+	for i := 0; i < DIM; i++ {
+		dotProduct += a[i] * b[i]
+		aSquareSum += a[i] * a[i]
+		bSquareSum += b[i] * b[i]
+	}
+	return float64(dotProduct) / (math.Sqrt(float64(aSquareSum)) * math.Sqrt(float64(bSquareSum)))
+}
+
+func Recall(query string) string {
+	log.Println("Recalling")
+	memories := readMemories()
+	var allMemories strings.Builder
+
+	for _, memory := range memories {
+		allMemories.WriteString(memory.Value + ". ")
+	}
+
+	return bert.AskBert(query, allMemories.String())
 }
 
 func Remember(query string) string {
@@ -67,26 +103,3 @@ func forget(memories []Memory) []Memory {
 	}
 	return currentMemories
 }
-
-//func readGloVe() *map[string][]float32 {
-//	glove := make(map[string][]float32)
-//	file, err := os.Open("data/glove50d.txt")
-//	if err != nil {
-//		log.Fatal(err)
-//	}
-//	defer file.Close()
-//
-//	scanner := bufio.NewScanner(file)
-//	for scanner.Scan() {
-//		line := strings.Split(scanner.Text(), " ")
-//
-//		embedding := make([]float32, DIM)
-//		for i := 0; i < DIM; i++ {
-//			val, _ := strconv.ParseFloat(line[i+1], 32)
-//			embedding[i] = float32(val)
-//		}
-//
-//		glove[line[0]] = embedding
-//	}
-//	return &glove
-//}

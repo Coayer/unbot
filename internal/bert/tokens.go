@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-var vocab *vocabulary = loadVocab()
+var vocab = loadVocab()
 
 //vocabulary stores the tokenizer's vocabulary
 type vocabulary struct {

@@ -13,7 +13,7 @@ import (
 var airlines = loadCsv("data/airlines.csv")
 
 var apiURL = fmt.Sprintf("https://opensky-network.org/api/states/all?lamin=%f&lomin=%f&lamax=%f&lomax=%f",
-	utils.LAT-0.3, utils.LON-0.3, utils.LAT+0.3, utils.LON+0.3)
+	utils.Config.Location.Latitude-0.3, utils.Config.Location.Longitude-0.3, utils.Config.Location.Latitude+0.3, utils.Config.Location.Longitude+0.3)
 
 type OpenSkyFetch struct {
 	States [][17]interface{}
@@ -33,7 +33,8 @@ func closestPlane(stateVectors OpenSkyFetch) [17]interface{} {
 	for _, vector := range stateVectors.States {
 		log.Println(vector[1])
 
-		distance := math.Pow((vector[5].(float64)-utils.LON)*math.Cos(utils.LAT), 2) + math.Pow(vector[6].(float64)-utils.LAT, 2)
+		distance := math.Pow((vector[5].(float64)-utils.Config.Location.Longitude)*math.Cos(utils.Config.Location.Latitude), 2) +
+			math.Pow(vector[6].(float64)-utils.Config.Location.Latitude, 2)
 		if distance < minDistance {
 			plane = vector
 			minDistance = distance
@@ -70,6 +71,8 @@ func parsePlanes(bytes []byte) OpenSkyFetch {
 
 //loadCsv is used to load the ICAO airline codes to their full names
 func loadCsv(path string) map[string]string {
+	log.Println("Loading airlines")
+
 	file, err := os.Open(path)
 	if err != nil {
 		log.Fatal(err)

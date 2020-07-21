@@ -8,8 +8,6 @@ import (
 	"strings"
 )
 
-const LAT, LON = 51.5395224, -0.1658538
-
 var stopWords = []string{"i", "me", "my", "myself", "we", "our", "ours", "ourselves", "you", "your", "yours", "yourself",
 	"yourselves", "he", "him", "his", "himself", "she", "her", "hers", "herself", "it", "its", "itself", "they", "them",
 	"their", "theirs", "themselves", "what", "which", "who", "whom", "this", "that", "these", "those", "am", "is", "are",
@@ -40,10 +38,10 @@ func BaseTokenize(sequence string) []string {
 	return result
 }
 
-func RemoveStopWords(query string) string {
+func RemoveStopWords(sentence string) string {
 	var cleanedQuery strings.Builder
 
-	for _, token := range BaseTokenize(query) {
+	for _, token := range BaseTokenize(sentence) {
 		for i := 0; i < len(stopWords); i++ {
 			if stopWords[i] == token {
 				break
