@@ -21,7 +21,6 @@ import (
 TODO
 
 BM25 stop 0.000
-Config file -- location, owm key
 Conversion package
 */
 

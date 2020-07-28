@@ -24,7 +24,7 @@ func Match(query string) bool {
 
 	for _, memory := range memories {
 		similarity := cosineSimilarity(queryVec, sentence2Vec(utils.RemoveStopWords(memory.Value)))
-		log.Println(similarity)
+		log.Println("Memory similarity:", similarity)
 		if similarity > 0.8 {
 			return true
 		}
