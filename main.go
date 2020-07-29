@@ -7,6 +7,7 @@ import (
 	"github.com/Coayer/unbot/internal/knowledge"
 	"github.com/Coayer/unbot/internal/memory"
 	"github.com/Coayer/unbot/internal/plane"
+	"github.com/Coayer/unbot/internal/utils"
 	"github.com/Coayer/unbot/internal/weather"
 	"log"
 	"net/http"
@@ -41,19 +42,34 @@ func main() {
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
+	if !checkAuth(r.Header.Get("Authorization")) {
+		http.Error(w, "Incorrect authentication key", http.StatusForbidden)
+		log.Println("Connection denied")
+		return
+	}
+
 	if r.Method == "GET" {
 		query := r.URL.Query().Get("query")
 
 		if query == "" {
 			log.Println("Ping received")
 		} else {
-			fmt.Println()
 			log.Println(query)
 			result := getResponse(query)
 			log.Println(result)
 			fmt.Fprint(w, result)
+			fmt.Println()
 		}
 	}
+}
+
+func checkAuth(auth string) bool {
+	for _, key := range utils.Config.UnbotKeys {
+		if auth == key {
+			return true
+		}
+	}
+	return false
 }
 
 var calculatorRegex = regexp.MustCompile("\\d+(\\.\\d+)? [-+x/^]")

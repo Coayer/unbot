@@ -1,3 +1,6 @@
+unbot_keys:
+  - KEY1
+  - KEY2...
 openweathermap_key: KEYGOESHERE
 location:
   latitude: 0

@@ -9,8 +9,9 @@ import (
 var Config = LoadConfig()
 
 type ConfigFile struct {
-	OwmKey   string `yaml:"openweathermap_key"`
-	Location struct {
+	UnbotKeys []string `yaml:"unbot_keys"`
+	OwmKey    string   `yaml:"openweathermap_key"`
+	Location  struct {
 		Latitude  float64
 		Longitude float64
 	}

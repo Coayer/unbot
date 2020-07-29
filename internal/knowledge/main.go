@@ -11,15 +11,13 @@ import (
 var previousQuery string
 
 func AskWiki(query string) string {
-	tempQuery := query
 	query = addMissingEntities(query)
-	previousQuery = tempQuery
+	previousQuery = query
 	log.Println(query)
 	ddg := getDuckDuckGo(query)
 
 	if ddg != "" {
 		log.Println("Using DuckDuckGo")
-
 		return bert.AskBert(query, ddg)
 	} else {
 		log.Println("Using Wikipedia")
