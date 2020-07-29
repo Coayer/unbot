@@ -13,36 +13,63 @@ import (
 var airlines = loadAirlines(loadCsv("data/airlines.csv"))
 var aircraft = loadAircraft(loadCsv("data/aircraft.csv"))
 
-var apiURL = fmt.Sprintf("https://opensky-network.org/api/states/all?lamin=%f&lomin=%f&lamax=%f&lomax=%f",
-	utils.Config.Location.Latitude-0.3, utils.Config.Location.Longitude-0.3, utils.Config.Location.Latitude+0.3, utils.Config.Location.Longitude+0.3)
-
 type OpenSkyFetch struct {
 	States [][17]interface{}
 }
 
 //GetPlane is used by calling code to run the package
-func GetPlane() string {
-	log.Println(apiURL)
-	stateVectors := parsePlanes(utils.HttpGet(apiURL))
+func GetPlane(query string) string {
+	utils.UpdatePlace(query)
+	openSkyURL := generateOpenSkyURL()
+	log.Println(openSkyURL)
+	stateVectors := parsePlanes(utils.HttpGet(openSkyURL))
+
+	if stateVectors.States == nil {
+		return "No planes found"
+	}
+
 	plane := closestPlane(stateVectors)
 	return formatPlane(plane)
+}
+
+func generateOpenSkyURL() string {
+	distance := 0.3
+
+	if utils.CurrentPlace != "" {
+		latitude, longitude := utils.GetLocation()
+		return fmt.Sprintf("https://opensky-network.org/api/states/all?lamin=%f&lomin=%f&lamax=%f&lomax=%f",
+			latitude-distance, longitude-distance, latitude+distance, longitude+distance)
+	} else {
+		return fmt.Sprintf("https://opensky-network.org/api/states/all?lamin=%f&lomin=%f&lamax=%f&lomax=%f",
+			utils.Config.Location.Latitude-distance, utils.Config.Location.Longitude-distance, utils.Config.Location.Latitude+distance, utils.Config.Location.Longitude+distance)
+	}
 }
 
 func formatPlane(vector [17]interface{}) string {
 	if vector[8] == "true" {
 		return formatCallsign(vector[1].(string)) + " on ground"
 	} else {
-		return fmt.Sprintf("%s, %s, bearing %d, at %d feet, heading %d", formatCallsign(vector[1].(string)),
-			aircraft[vector[0].(string)], bearingToPlane(vector), int(vector[7].(float64)*3.281), int(vector[10].(float64)))
+		return fmt.Sprintf("%s, %s, %s, at %d feet, heading %s", formatCallsign(vector[1].(string)),
+			aircraft[vector[0].(string)], directionToPlane(vector), int(vector[7].(float64)*3.281), bearingCardinal(vector[10].(float64)))
 	}
 }
 
-func bearingToPlane(vector [17]interface{}) int {
+func directionToPlane(vector [17]interface{}) string {
 	planeLong, planeLat := vector[5].(float64), vector[6].(float64)
 	y := math.Sin(planeLong-utils.Config.Location.Longitude) * math.Cos(planeLat)
 	x := math.Cos(utils.Config.Location.Latitude)*math.Sin(planeLat) -
 		math.Sin(utils.Config.Location.Latitude)*math.Cos(planeLat)*math.Cos(planeLong-utils.Config.Location.Longitude)
-	return int(math.Mod(math.Atan2(y, x)*180/math.Pi+360, 360))
+	bearing := math.Mod(math.Atan2(y, x)*180/math.Pi+360, 360)
+
+	return bearingCardinal(bearing)
+}
+
+func bearingCardinal(bearing float64) string {
+	directions := []string{"north", "north-northeast", "north-east", "east-northeast", "east", "east-southeast",
+		"south-east", "south-southeast", "south", "south-southwest", "south-west", "west-southwest", "west",
+		"west-northwest", "north-west", "north-northwest"}
+
+	return directions[int((bearing+11.25)/22.5)%16]
 }
 
 func closestPlane(stateVectors OpenSkyFetch) [17]interface{} {

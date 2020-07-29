@@ -10,9 +10,6 @@ import (
 	"time"
 )
 
-var apiURL = fmt.Sprintf("https://api.openweathermap.org/data/2.5/onecall?units=metric&lat=%f&lon=%f&exclude=minutely,hourly,current&appid=%s",
-	utils.Config.Location.Latitude, utils.Config.Location.Longitude, utils.Config.OwmKey)
-
 type DailyWeather struct {
 	Sunrise int
 	Sunset  int
@@ -29,6 +26,17 @@ type DailyWeather struct {
 }
 
 func GetWeather(query string) string {
+	utils.UpdatePlace(query)
+	var apiURL string
+
+	if utils.CurrentPlace == "" {
+		apiURL = fmt.Sprintf("https://api.openweathermap.org/data/2.5/onecall?units=metric&lat=%f&lon=%f&exclude=minutely,hourly,current&appid=%s",
+			utils.Config.Location.Latitude, utils.Config.Location.Longitude, utils.Config.OwmKey)
+	} else {
+		latitude, longitude := utils.GetLocation()
+		apiURL = fmt.Sprintf("https://api.openweathermap.org/data/2.5/onecall?units=metric&lat=%f&lon=%f&exclude=minutely,hourly,current&appid=%s",
+			latitude, longitude, utils.Config.OwmKey)
+	}
 	log.Println(apiURL)
 	query = strings.ToLower(query)
 	weather := parseWeather(utils.HttpGet(apiURL))

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"github.com/Coayer/unbot/internal/utils"
 	"log"
-	"strings"
 	"unicode"
 )
 
@@ -57,7 +56,7 @@ func getArticles(query string) *[]article {
 
 func getDuckDuckGo(query string) string {
 	return parseDuckDuckGo(utils.HttpGet("https://api.duckduckgo.com/?format=json&t=github_coayer_unbot&q=" +
-		formatHTTPQuery(query)))
+		utils.FormatHTTPQuery(query)))
 }
 
 func parseDuckDuckGo(bytes []byte) string {
@@ -124,7 +123,7 @@ func constructTitleSearch(srsearch string) string {
 	srsort := "relevance" //"relevance", "none", "just_match"
 	srlimit := "5"
 
-	return WIKIPEDIA + "list=search&srsearch=" + formatHTTPQuery(srsearch) +
+	return WIKIPEDIA + "list=search&srsearch=" + utils.FormatHTTPQuery(srsearch) +
 		"&srlimit=" + srlimit + "&srqiprofile=" + srqiprofile + "&srwhat=" + srwhat +
 		"&srinfo=&srprop=&srsort=" + srsort
 }
@@ -135,7 +134,7 @@ func constructArticleFetch(titles []string) string {
 	first := true
 
 	for _, title := range titles {
-		title = formatHTTPQuery(title)
+		title = utils.FormatHTTPQuery(title)
 
 		if !first {
 			fetchTitles += "%7C" + title
@@ -146,8 +145,4 @@ func constructArticleFetch(titles []string) string {
 	}
 
 	return WIKIPEDIA + "prop=extracts&titles=" + fetchTitles + "&formatversion=2&exintro=1&explaintext=1"
-}
-
-func formatHTTPQuery(query string) string {
-	return strings.ReplaceAll(query, " ", "%20")
 }

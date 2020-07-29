@@ -42,7 +42,7 @@ func addMissingEntities(query string) string {
 
 	for _, token := range doc.Tokens() {
 		if token.Tag == "PRP" || token.Tag == "PRP$" {
-			newQuery.WriteString(getPreviousEntities())
+			newQuery.WriteString(utils.GetEntities(previousQuery))
 		} else {
 			if len(token.Text) != 1 {
 				newQuery.WriteString(token.Text + " ")
@@ -53,22 +53,4 @@ func addMissingEntities(query string) string {
 	}
 	newQuery.WriteString("?") //needed for prose NER to work
 	return newQuery.String()
-}
-
-func getPreviousEntities() string {
-	doc, err := prose.NewDocument(previousQuery,
-		prose.WithSegmentation(false))
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	var entity strings.Builder
-
-	for _, ent := range doc.Entities() {
-		log.Println("Found entity: " + ent.Text)
-		entity.WriteString(ent.Text + " ")
-	}
-
-	return entity.String()
 }

@@ -2,9 +2,7 @@ package utils
 
 import (
 	"github.com/jdkato/prose/v2"
-	"io/ioutil"
 	"log"
-	"net/http"
 	"strings"
 )
 
@@ -55,22 +53,20 @@ func RemoveStopWords(sentence string) string {
 	return cleanedQuery.String()
 }
 
-//performs GET request on given URL
-func HttpGet(url string) []byte {
-	resp, err := http.Get(url)
-	if resp != nil {
-		defer resp.Body.Close()
-	}
+func GetEntities(sequence string) string {
+	doc, err := prose.NewDocument(sequence,
+		prose.WithSegmentation(false))
 
 	if err != nil {
-		log.Println(err)
-		return nil
+		log.Fatal(err)
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Println(err)
-		return nil
+	var entity strings.Builder
+
+	for _, ent := range doc.Entities() {
+		log.Println("Found entity: " + ent.Text)
+		entity.WriteString(ent.Text + " ")
 	}
-	return body
+
+	return entity.String()
 }

@@ -76,7 +76,7 @@ var calculatorRegex = regexp.MustCompile("\\d+(\\.\\d+)? [-+x/^]")
 
 func getResponse(query string) string {
 	if strings.Contains(query, "plane") {
-		return plane.GetPlane()
+		return plane.GetPlane(query)
 	} else if strings.Contains(query, "weather") || strings.Contains(query, "sunset") || strings.Contains(query, "sunrise") {
 		return weather.GetWeather(query)
 	} else if calculatorRegex.MatchString(query) {
