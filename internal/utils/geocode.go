@@ -14,7 +14,7 @@ type Place struct {
 var CurrentPlace string
 
 func UpdatePlace(query string) {
-	CurrentPlace = GetEntities(query + "?")
+	CurrentPlace = GetEntities(query + "?") //needed for prose NER to work
 }
 
 func GetLocation() (float64, float64) {
