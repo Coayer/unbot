@@ -4,7 +4,8 @@ A natural language assistant, written in Go.
 
 unbot data stays private by keeping processing local and using external services only where necessary.
 
-###Features:
+### Features:
+
 Open-domain question answering utilising hashed bigram BM25 Wikipedia article selection (inspired by Facebook's DrQA) or 
 DuckDuckGo instant answers, and SQuAD-finetuned DistillBERT for answer retrieval. Named-entity recognition allows for 
 conversational flow.
@@ -55,6 +56,6 @@ A: 7.883380
 
 ---
 
-![unbot tasker screenshot](https://github.com/Coayer/unbot/assets/tasker.png)
+<img src="assets/tasker.png" width="250" alt="Tasker client">
 
 Thank you @jdkato for the excellent [jdkato/prose](https://github.com/jdkato/prose)
