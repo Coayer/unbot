@@ -94,14 +94,14 @@ func parseExpression(query string) []string {
 	startToken := 0
 
 	for i, token := range tokens {
-		if isNumeric(token) {
+		if utils.IsNumeric(token) {
 			startToken = i
 			break
 		}
 	}
 
 	for i, token := range tokens[startToken:] {
-		if !((i%2 == 0 && isNumeric(token)) || (i%2 != 0 && isOperator(token))) {
+		if !((i%2 == 0 && utils.IsNumeric(token)) || (i%2 != 0 && isOperator(token))) {
 			return []string{}
 		}
 	}
@@ -113,16 +113,6 @@ func parseExpression(query string) []string {
 	} else {
 		return expression
 	}
-}
-
-//isNumeric checks if a token is a number
-func isNumeric(token string) bool {
-	for _, char := range token {
-		if (char < '0' || char > '9') && char != '.' {
-			return false
-		}
-	}
-	return true
 }
 
 //isOperator checks if a token is an operator the calculator can use

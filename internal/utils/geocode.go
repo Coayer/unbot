@@ -2,6 +2,7 @@ package utils
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"strconv"
 )
@@ -18,8 +19,8 @@ func UpdatePlace(query string) {
 }
 
 func GetLocation() (float64, float64) {
-	bytes := HttpGet("https://nominatim.openstreetmap.org/search?countrycodes=gb&format=json&q=" +
-		FormatHTTPQuery(CurrentPlace))
+	bytes := HttpGet(fmt.Sprintf("https://nominatim.openstreetmap.org/search?format=json&countrycodes=%s&q=%s",
+		Config.Location.Country, FormatHTTPQuery(CurrentPlace)))
 
 	var response []Place
 

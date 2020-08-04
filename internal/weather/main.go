@@ -6,6 +6,7 @@ import (
 	"github.com/Coayer/unbot/internal/utils"
 	"log"
 	"math"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -19,10 +20,11 @@ type DailyWeather struct {
 		Eve   float64
 		Morn  float64
 	}
-	Humidity uint8
+	Humidity int
 	Weather  []struct {
 		Description string
 	}
+	Uvi float64
 }
 
 func GetWeather(query string) string {
@@ -72,7 +74,7 @@ func weatherDescription(weather DailyWeather, query string) string {
 	var description strings.Builder
 
 	for _, condition := range weather.Weather {
-		description.WriteString(condition.Description + " ")
+		description.WriteString(condition.Description + ", ")
 	}
 
 	var temperature float64
@@ -87,8 +89,17 @@ func weatherDescription(weather DailyWeather, query string) string {
 		temperature = weather.Temp.Day
 	}
 
-	return fmt.Sprintf("%s, %d degrees, %d percent humidity", description.String(), int(math.Round(temperature)),
-		weather.Humidity)
+	description.WriteString(strconv.Itoa(int(math.Round(temperature))) + " degrees, ")
+
+	if weather.Humidity > 45 {
+		description.WriteString(strconv.Itoa(weather.Humidity) + "% humidity, ")
+	}
+
+	if weather.Uvi > 2 {
+		description.WriteString("UV index " + strconv.Itoa(int(math.Round(weather.Uvi))))
+	}
+
+	return description.String()
 }
 
 func formatTime(epoch int) string {

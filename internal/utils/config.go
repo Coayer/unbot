@@ -12,6 +12,7 @@ type ConfigFile struct {
 	UnbotKeys []string `yaml:"unbot_keys"`
 	OwmKey    string   `yaml:"openweathermap_key"`
 	Location  struct {
+		Country   string
 		Latitude  float64
 		Longitude float64
 	}

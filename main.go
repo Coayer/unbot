@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/Coayer/unbot/internal/bert"
 	"github.com/Coayer/unbot/internal/calculator"
+	"github.com/Coayer/unbot/internal/conversion"
 	"github.com/Coayer/unbot/internal/knowledge"
 	"github.com/Coayer/unbot/internal/memory"
 	"github.com/Coayer/unbot/internal/plane"
@@ -21,8 +22,7 @@ import (
 /*
 TODO
 
-BM25 stop 0.000
-Conversion package
+HN "news" news summary
 */
 
 func init() {
@@ -73,6 +73,7 @@ func checkAuth(auth string) bool {
 }
 
 var calculatorRegex = regexp.MustCompile("\\d+(\\.\\d+)? [-+x/^]")
+var conversionRegex = regexp.MustCompile("\\d+(\\.\\d+)?")
 
 func getResponse(query string) string {
 	if strings.Contains(query, "plane") {
@@ -81,6 +82,8 @@ func getResponse(query string) string {
 		return weather.GetWeather(query)
 	} else if calculatorRegex.MatchString(query) {
 		return calculator.Evaluate(query)
+	} else if conversionRegex.MatchString(query) {
+		return conversion.Convert(query)
 	} else if strings.Contains(query, "remember") {
 		return memory.Remember(query)
 	} else if memory.Match(query) {

@@ -70,3 +70,13 @@ func GetEntities(sequence string) string {
 
 	return entity.String()
 }
+
+//isNumeric checks if a token is a number
+func IsNumeric(token string) bool {
+	for _, char := range token {
+		if (char < '0' || char > '9') && char != '.' {
+			return false
+		}
+	}
+	return true
+}
