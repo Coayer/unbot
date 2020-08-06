@@ -3,7 +3,7 @@ package weather
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Coayer/unbot/internal/utils"
+	"github.com/Coayer/unbot/internal/pkg"
 	"log"
 	"math"
 	"strconv"
@@ -28,20 +28,20 @@ type DailyWeather struct {
 }
 
 func GetWeather(query string) string {
-	utils.UpdatePlace(query)
+	pkg.UpdatePlace(query)
 	var apiURL string
 
-	if utils.CurrentPlace == "" {
+	if pkg.CurrentPlace == "" {
 		apiURL = fmt.Sprintf("https://api.openweathermap.org/data/2.5/onecall?units=metric&lat=%f&lon=%f&exclude=minutely,hourly,current&appid=%s",
-			utils.Config.Location.Latitude, utils.Config.Location.Longitude, utils.Config.OwmKey)
+			pkg.Config.Location.Latitude, pkg.Config.Location.Longitude, pkg.Config.OwmKey)
 	} else {
-		latitude, longitude := utils.GetLocation()
+		latitude, longitude := pkg.GetLocation()
 		apiURL = fmt.Sprintf("https://api.openweathermap.org/data/2.5/onecall?units=metric&lat=%f&lon=%f&exclude=minutely,hourly,current&appid=%s",
-			latitude, longitude, utils.Config.OwmKey)
+			latitude, longitude, pkg.Config.OwmKey)
 	}
 	log.Println(apiURL)
 	query = strings.ToLower(query)
-	weather := parseWeather(utils.HttpGet(apiURL))
+	weather := parseWeather(pkg.HttpGet(apiURL))
 	day := int(time.Now().Weekday())
 
 	if strings.Contains(query, "now") || strings.Contains(query, "today") {

@@ -2,7 +2,7 @@ package knowledge
 
 import (
 	"encoding/json"
-	"github.com/Coayer/unbot/internal/utils"
+	"github.com/Coayer/unbot/internal/pkg"
 	"log"
 	"unicode"
 )
@@ -44,19 +44,19 @@ func getArticles(query string) *[]article {
 	searchURL := constructTitleSearch(query)
 	log.Println(searchURL)
 
-	searchResults := utils.HttpGet(searchURL)
+	searchResults := pkg.HttpGet(searchURL)
 	titles := parseTitles(searchResults)
 	log.Println(titles)
 
 	articlesURL := constructArticleFetch(titles)
 	log.Println(articlesURL)
 
-	return parseArticles(utils.HttpGet(articlesURL))
+	return parseArticles(pkg.HttpGet(articlesURL))
 }
 
 func getDuckDuckGo(query string) string {
-	return parseDuckDuckGo(utils.HttpGet("https://api.duckduckgo.com/?format=json&t=github_coayer_unbot&q=" +
-		utils.FormatHTTPQuery(query)))
+	return parseDuckDuckGo(pkg.HttpGet("https://api.duckduckgo.com/?format=json&t=github_coayer_unbot&q=" +
+		pkg.FormatHTTPQuery(query)))
 }
 
 func parseDuckDuckGo(bytes []byte) string {
@@ -110,7 +110,7 @@ func parseArticles(bytes []byte) *[]article {
 	for _, page := range response.Query.Pages {
 		articles = append(articles, article{title: page.Title,
 			content: page.Extract,
-			tokens:  utils.BaseTokenize(page.Extract)})
+			tokens:  pkg.BaseTokenize(page.Extract)})
 	}
 
 	return &articles
@@ -123,7 +123,7 @@ func constructTitleSearch(srsearch string) string {
 	srsort := "relevance" //"relevance", "none", "just_match"
 	srlimit := "5"
 
-	return WIKIPEDIA + "list=search&srsearch=" + utils.FormatHTTPQuery(srsearch) +
+	return WIKIPEDIA + "list=search&srsearch=" + pkg.FormatHTTPQuery(srsearch) +
 		"&srlimit=" + srlimit + "&srqiprofile=" + srqiprofile + "&srwhat=" + srwhat +
 		"&srinfo=&srprop=&srsort=" + srsort
 }
@@ -134,7 +134,7 @@ func constructArticleFetch(titles []string) string {
 	first := true
 
 	for _, title := range titles {
-		title = utils.FormatHTTPQuery(title)
+		title = pkg.FormatHTTPQuery(title)
 
 		if !first {
 			fetchTitles += "%7C" + title

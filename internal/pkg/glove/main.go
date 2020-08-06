@@ -1,8 +1,8 @@
-package memory
+package glove
 
 import (
 	"bufio"
-	"github.com/Coayer/unbot/internal/utils"
+	"github.com/Coayer/unbot/internal/pkg"
 	"log"
 	"os"
 	"strconv"
@@ -13,9 +13,9 @@ const DIM = 50
 
 var glove = readGloVe()
 
-func sentence2Vec(sentence string) []float32 {
-	sentence = utils.RemoveStopWords(strings.ToLower(sentence))
-	tokens := utils.BaseTokenize(sentence)
+func Sentence2Vec(sentence string) []float32 {
+	sentence = pkg.RemoveStopWords(strings.ToLower(sentence))
+	tokens := pkg.BaseTokenize(sentence)
 
 	tokenVectors := make([][]float32, len(tokens))
 	for i := 0; i < len(tokens); i++ {

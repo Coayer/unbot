@@ -2,7 +2,7 @@ package calculator
 
 import (
 	"fmt"
-	"github.com/Coayer/unbot/internal/utils"
+	"github.com/Coayer/unbot/internal/pkg"
 	"log"
 	"math"
 	"strconv"
@@ -90,18 +90,18 @@ func calculate(expression []string) string {
 
 //parseExpression removes additional tokens from a raw query
 func parseExpression(query string) []string {
-	tokens := utils.BaseTokenize(query)
+	tokens := pkg.BaseTokenize(query)
 	startToken := 0
 
 	for i, token := range tokens {
-		if utils.IsNumeric(token) {
+		if pkg.IsNumeric(token) {
 			startToken = i
 			break
 		}
 	}
 
 	for i, token := range tokens[startToken:] {
-		if !((i%2 == 0 && utils.IsNumeric(token)) || (i%2 != 0 && isOperator(token))) {
+		if !((i%2 == 0 && pkg.IsNumeric(token)) || (i%2 != 0 && isOperator(token))) {
 			return []string{}
 		}
 	}

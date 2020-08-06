@@ -47,6 +47,13 @@ Q: What is the weather in Cardiff on Tuesday morning?
 A: Moderate rain, 13 degrees, 92 percent humidity
 ```
 
+Unit conversion.
+
+```
+Q: What is 5.2 kilos in pounds?
+A: 11.46 pounds
+```
+
 Calculator for arithmetic operations.
 
 ```

@@ -2,7 +2,7 @@ package conversion
 
 import (
 	"fmt"
-	"github.com/Coayer/unbot/internal/utils"
+	"github.com/Coayer/unbot/internal/pkg"
 	"math"
 	"strconv"
 )
@@ -37,13 +37,13 @@ func Convert(query string) string {
 }
 
 func parseConversion(query string) (float64, string, string) {
-	tokens := utils.BaseTokenize(utils.RemoveStopWords(query))
+	tokens := pkg.BaseTokenize(pkg.RemoveStopWords(query))
 
 	var value float64
 	var unit1, unit2 string
 
 	for _, token := range tokens {
-		if utils.IsNumeric(token) {
+		if pkg.IsNumeric(token) {
 			value, _ = strconv.ParseFloat(token, 64)
 		}
 

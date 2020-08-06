@@ -2,7 +2,7 @@ package knowledge
 
 import (
 	"fmt"
-	"github.com/Coayer/unbot/internal/utils"
+	"github.com/Coayer/unbot/internal/pkg"
 	"hash/fnv"
 	"log"
 	"math"
@@ -120,7 +120,7 @@ func termFreq(term int, document []int) int {
 
 //articleQueryBigrams produces bigram representations of a query and articles
 func articleQueryBigrams(query string, articles *[]article) ([]int, *[][]int) {
-	queryTokens := utils.BaseTokenize(query)
+	queryTokens := pkg.BaseTokenize(query)
 	queryBigrams := hashBigrams(queryTokens)
 
 	articleBigrams := make([][]int, len(*articles))

@@ -2,7 +2,7 @@ package bert
 
 import (
 	"bufio"
-	"github.com/Coayer/unbot/internal/utils"
+	"github.com/Coayer/unbot/internal/pkg"
 	"log"
 	"os"
 	"strings"
@@ -61,7 +61,7 @@ func tokensToEnglish(tokens []string) string {
 func tokenize(sequence string) []string {
 	var result []string
 
-	for _, token := range utils.BaseTokenize(sequence) {
+	for _, token := range pkg.BaseTokenize(sequence) {
 		for _, piece := range wordPieceTokenizer(token) {
 			result = append(result, piece)
 		}

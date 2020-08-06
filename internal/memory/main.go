@@ -2,8 +2,9 @@ package memory
 
 import (
 	"encoding/json"
-	"github.com/Coayer/unbot/internal/bert"
-	"github.com/Coayer/unbot/internal/utils"
+	"github.com/Coayer/unbot/internal/pkg"
+	"github.com/Coayer/unbot/internal/pkg/bert"
+	"github.com/Coayer/unbot/internal/pkg/glove"
 	"io/ioutil"
 	"log"
 	"math"
@@ -20,10 +21,10 @@ type Memory struct {
 
 func Match(query string) bool {
 	memories := readMemories()
-	queryVec := sentence2Vec(utils.RemoveStopWords(query))
+	queryVec := glove.Sentence2Vec(pkg.RemoveStopWords(query))
 
 	for _, memory := range memories {
-		similarity := cosineSimilarity(queryVec, sentence2Vec(utils.RemoveStopWords(memory.Value)))
+		similarity := cosineSimilarity(queryVec, glove.Sentence2Vec(pkg.RemoveStopWords(memory.Value)))
 		log.Println("Memory similarity:", similarity)
 		if similarity > 0.8 {
 			return true
@@ -35,7 +36,7 @@ func Match(query string) bool {
 func cosineSimilarity(a []float32, b []float32) float64 {
 	var dotProduct float32
 	var aSquareSum, bSquareSum float32
-	for i := 0; i < DIM; i++ {
+	for i := 0; i < glove.DIM; i++ {
 		dotProduct += a[i] * b[i]
 		aSquareSum += a[i] * a[i]
 		bSquareSum += b[i] * b[i]
@@ -57,7 +58,7 @@ func Recall(query string) string {
 
 func Remember(query string) string {
 	memories := readMemories()
-	tokens := utils.BaseTokenize(query)[1:]
+	tokens := pkg.BaseTokenize(query)[1:]
 
 	if tokens[0] == "forever" {
 		writeMemories(append(memories, Memory{Value: strings.Join(tokens[1:], " ")}))

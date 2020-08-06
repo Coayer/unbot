@@ -1,8 +1,8 @@
 package knowledge
 
 import (
-	"github.com/Coayer/unbot/internal/bert"
-	"github.com/Coayer/unbot/internal/utils"
+	"github.com/Coayer/unbot/internal/pkg"
+	"github.com/Coayer/unbot/internal/pkg/bert"
 	"github.com/jdkato/prose/v2"
 	"log"
 	"strings"
@@ -22,7 +22,7 @@ func AskWiki(query string) string {
 	} else {
 		log.Println("Using Wikipedia")
 
-		cleanQuery := utils.RemoveStopWords(query)
+		cleanQuery := pkg.RemoveStopWords(query)
 		articles := getArticles(cleanQuery)
 		best, secondBest := getRelevantArticle(articles, cleanQuery)
 		return bert.AskBert(query, (*articles)[best].content+" "+(*articles)[secondBest].content)
@@ -42,7 +42,7 @@ func addMissingEntities(query string) string {
 
 	for _, token := range doc.Tokens() {
 		if token.Tag == "PRP" || token.Tag == "PRP$" {
-			newQuery.WriteString(utils.GetEntities(previousQuery))
+			newQuery.WriteString(pkg.GetEntities(previousQuery))
 		} else {
 			if len(token.Text) != 1 {
 				newQuery.WriteString(token.Text + " ")

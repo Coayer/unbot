@@ -1,4 +1,4 @@
-package utils
+package pkg
 
 import (
 	"gopkg.in/yaml.v3"
@@ -10,6 +10,7 @@ var Config = LoadConfig()
 
 type ConfigFile struct {
 	UnbotKeys []string `yaml:"unbot_keys"`
+	EndWord   string   `yaml:"end_word"`
 	OwmKey    string   `yaml:"openweathermap_key"`
 	Location  struct {
 		Country   string

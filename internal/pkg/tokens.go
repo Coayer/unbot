@@ -1,4 +1,4 @@
-package utils
+package pkg
 
 import (
 	"github.com/jdkato/prose/v2"
