@@ -12,8 +12,8 @@ import (
 )
 
 type DailyWeather struct {
-	Sunrise int
-	Sunset  int
+	Sunrise int64
+	Sunset  int64
 	Temp    struct {
 		Day   float64
 		Night float64
@@ -28,36 +28,17 @@ type DailyWeather struct {
 }
 
 func GetWeather(query string) string {
-	pkg.UpdatePlace(query)
 	var apiURL string
 
-	if pkg.CurrentPlace == "" {
-		apiURL = fmt.Sprintf("https://api.openweathermap.org/data/2.5/onecall?units=metric&lat=%f&lon=%f&exclude=minutely,hourly,current&appid=%s",
-			pkg.Config.Location.Latitude, pkg.Config.Location.Longitude, pkg.Config.OwmKey)
-	} else {
-		latitude, longitude := pkg.GetLocation()
-		apiURL = fmt.Sprintf("https://api.openweathermap.org/data/2.5/onecall?units=metric&lat=%f&lon=%f&exclude=minutely,hourly,current&appid=%s",
-			latitude, longitude, pkg.Config.OwmKey)
-	}
+	location := pkg.GetLocation(query)
+	apiURL = fmt.Sprintf("https://api.openweathermap.org/data/2.5/onecall?units=metric&lat=%f&lon=%f&exclude=minutely,hourly,current&appid=%s",
+		location.Latitude, location.Longitude, pkg.Config.OwmKey)
+
 	log.Println(apiURL)
 	query = strings.ToLower(query)
 	weather := parseWeather(pkg.HttpGet(apiURL))
-	day := int(time.Now().Weekday())
 
-	if strings.Contains(query, "now") || strings.Contains(query, "today") {
-		return generateDescription(weather[0], query)
-	} else if strings.Contains(query, "tomorrow") || strings.Contains(query, time.Weekday(day+1).String()) {
-		return generateDescription(weather[1], query)
-	} else {
-		for i := 1; i <= 7; i++ {
-			//owm gives weather relative to current day, not to start of week
-			if strings.Contains(query, strings.ToLower(time.Weekday((day+i)%7).String())) {
-				return generateDescription(weather[i], query)
-			}
-		}
-	}
-
-	return "No weather found"
+	return generateDescription(weather[pkg.ParseDay(query)], query)
 }
 
 func generateDescription(weather DailyWeather, query string) string {
@@ -95,15 +76,15 @@ func weatherDescription(weather DailyWeather, query string) string {
 		description.WriteString(strconv.Itoa(weather.Humidity) + "% humidity, ")
 	}
 
-	if weather.Uvi > 2 {
+	if weather.Uvi > 2 && weather.Sunrise < time.Now().Unix() && weather.Sunset > time.Now().Unix() {
 		description.WriteString("UV index " + strconv.Itoa(int(math.Round(weather.Uvi))))
 	}
 
 	return description.String()
 }
 
-func formatTime(epoch int) string {
-	return time.Unix(int64(epoch), 0).Format("15:04")
+func formatTime(epoch int64) string {
+	return time.Unix(epoch, 0).Format("15:04")
 }
 
 func parseWeather(bytes []byte) []DailyWeather {

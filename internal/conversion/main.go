@@ -3,19 +3,23 @@ package conversion
 import (
 	"fmt"
 	"github.com/Coayer/unbot/internal/pkg"
+	"log"
 	"math"
 	"strconv"
 )
 
-var length = map[string]float64{"km": 1000, "miles": 1609, "m": 1, "meters": 1, "feet": 0.3048}
+var length = map[string]float64{"km": 1000, "kilometres": 1000, "miles": 1609, "m": 1, "meters": 1, "feet": 0.3048}
 
-var mass = map[string]float64{"kg": 1, "kilos": 1, "stone": 6.35, "lbs": 0.45359, "pounds": 0.45359, "g": 0.001,
+var mass = map[string]float64{"kg": 1, "kilos": 1, "kilograms": 1, "stone": 6.35, "lbs": 0.45359, "pounds": 0.45359, "g": 0.001,
 	"grams": 0.001, "ounces": 0.02835, "oz": 0.02835}
 
 var temperature = map[string]bool{"Celsius": true, "c": true, "Fahrenheit": false, "f": false}
 
 func Convert(query string) string {
+	fmt.Println(query)
 	value, unit1, unit2 := parseConversion(query)
+
+	log.Println(value, unit1, unit2)
 
 	if isLength(unit1) && isLength(unit2) {
 		return fmt.Sprintf("%.2f %s", value*length[unit1]/length[unit2], unit2)
@@ -38,6 +42,8 @@ func Convert(query string) string {
 
 func parseConversion(query string) (float64, string, string) {
 	tokens := pkg.BaseTokenize(pkg.RemoveStopWords(query))
+
+	log.Println(tokens)
 
 	var value float64
 	var unit1, unit2 string

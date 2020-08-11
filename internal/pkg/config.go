@@ -9,13 +9,12 @@ import (
 var Config = LoadConfig()
 
 type ConfigFile struct {
-	UnbotKeys []string `yaml:"unbot_keys"`
-	EndWord   string   `yaml:"end_word"`
+	UnbotKeys []string `yaml:"keys"`
 	OwmKey    string   `yaml:"openweathermap_key"`
-	Location  struct {
-		Country   string
-		Latitude  float64
-		Longitude float64
+	Country   string
+	Places    struct {
+		Default Place
+		Names   []string
 	}
 }
 

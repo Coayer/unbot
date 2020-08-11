@@ -1,9 +1,12 @@
-unbot_keys:
+keys:
+  - key
   - key1
-  - key2
-end_word: please
 openweathermap_key: key
-location:
-  country: country
-  latitude: 0
-  longitude: 0
+country: gb
+places:
+  default:
+    latitude: 1
+    longitude: 1
+  names:
+    - home
+    - work

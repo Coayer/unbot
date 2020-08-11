@@ -22,7 +22,7 @@ A: Apple updated Siri's voices for more clear, human voices
 ```
 
 Memory storage with natural recall. GloVe embeddings are used to determine if the answer to a question is stored as a 
-memory or if it should be searched on the web. DistillBERT is again used for answer selection. By default, memories have 
+memory or if it should be searched on the web. DistillBERT is used for answer selection. By default, memories have 
 an expiry time but can be marked for permanent storage.
 
 ```
@@ -30,6 +30,13 @@ Q: Remember my car is parked on Bond Street
 
 Q: Where is my car parked?
 A: Bond Street
+```
+
+Location and time based reminders. Extracting the reminder from the query is done using DistillBERT.
+
+```
+Q: Remind me at 10:23 on Friday to buy a new water bottle.
+A: Reminder set for 10:23 friday: buy a new water bottle
 ```
 
 Nearby aircraft information from OpenSky ADS-B data (operator, aircraft type, position relative to given location, 
