@@ -10,8 +10,8 @@ import (
 	"os"
 )
 
-var airlines = loadAirlines(loadCsv("data/airlines.csv"))
-var aircraft = loadAircraft(loadCsv("data/aircraft.csv"))
+var airlines = loadAirlines(loadCsv("data/internal/airlines.csv"))
+var aircraft = loadAircraft(loadCsv("data/internal/aircraft.csv"))
 
 type OpenSkyFetch struct {
 	States [][17]interface{}

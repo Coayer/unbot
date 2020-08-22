@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-const MEMORYPATH = "data/memories.json"
+const MEMORYPATH = "data/user/memories.json"
 
 type Memory struct {
 	Value  string

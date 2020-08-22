@@ -18,7 +18,7 @@ type vocabulary struct {
 
 //loadVocab loads BERT vocabulary from text file
 func loadVocab() *vocabulary {
-	file, err := os.Open("data/vocab.txt")
+	file, err := os.Open("data/internal/vocab.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -47,7 +47,7 @@ func tokensToEnglish(tokens []string) string {
 	var result strings.Builder
 
 	for _, token := range tokens {
-		if len(token) != 1 && token[0:2] == "##" {
+		if len(token) > 1 && token[0:2] == "##" {
 			result.WriteString(token[2:])
 		} else {
 			result.WriteString(" " + token)

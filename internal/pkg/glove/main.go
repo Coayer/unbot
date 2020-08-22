@@ -37,7 +37,7 @@ func readGloVe() *map[string][]float32 {
 	log.Println("Loading GloVe embeddings")
 
 	glove := make(map[string][]float32)
-	file, err := os.Open("data/glove50d.txt")
+	file, err := os.Open("data/internal/glove50d.txt")
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -17,7 +17,7 @@ type Reminder struct {
 	Time  int64
 }
 
-const REMINDERPATH = "data/reminders.json"
+const REMINDERPATH = "data/user/reminders.json"
 
 func GetReminders(condition string) string {
 	if condition == "time" {
@@ -97,7 +97,7 @@ func getPlaceReminders(place string) string {
 
 	for _, reminder := range readReminders() {
 		if reminder.Place == place {
-			builder.WriteString(reminder.Value + ". ")
+			builder.WriteString(reminder.Value)
 		} else {
 			currentReminders = append(currentReminders, reminder)
 		}

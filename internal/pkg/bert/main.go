@@ -12,7 +12,7 @@ const DIM int = 384
 
 //loadModel loads TensorFlow SavedModel from disk
 func loadModel() *tf.SavedModel {
-	model, err := tf.LoadSavedModel("data/qa_model", []string{"serve"}, nil)
+	model, err := tf.LoadSavedModel("data/internal/qa_model", []string{"serve"}, nil)
 
 	if err != nil {
 		log.Fatal(err)
